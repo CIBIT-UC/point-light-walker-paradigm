@@ -1,0 +1,7 @@
+Why MATLAB/linux is crashing everytime, complaining some MEX problem? DotRotDemo() is not crashing it, Octave/GNU is not, neither...and Windows MATLAB is just all right
+
+408: zhengyunyi: no DotRot, LSAS, ImEval data
+grpLine without switch-case
+
+{'changzhao_Whole1_07-May-2014.mat','guoxin_Whole1_07-May-2014.mat','liangxiao_Whole1_07-May-2014.mat','zhangfengqiang_Whole1_07-May-2014.mat'};
+
