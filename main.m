@@ -2,7 +2,15 @@
 
 
 %% PRESETS
-addpath(genpath('libs'))
+addpath(genpath(pwd))
 
+%%
+
+
+
+%%
 % Test PLW
 Demo
+
+%%
+InOutSimpleTask

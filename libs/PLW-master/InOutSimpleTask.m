@@ -21,7 +21,7 @@ mode.simpleInOut_on= 1;  % simple InOut exp, with the same tactile stimuli for b
 mode.colorbalance_on    = 1;  % balance the color of the target PLW, which is by default red
 mode.mirror_on     = 1;  % use mirror rather that spectacles for binacular rivalry
 mode.many_on       = 0;  % the task is the majority of dots the participant saw
-mode.debug_on      = 0;  % default is 0; 1 is not to use full screen, and skip the synch test
+mode.debug_on      = 1;  % default is 0; 1 is not to use full screen, and skip the synch test
 mode.english_on    = 0;  % use English for Instructions etc., 0 for Chinese(not supported for now!)
 
 if nargin > 0
