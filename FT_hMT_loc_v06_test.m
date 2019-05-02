@@ -122,7 +122,7 @@ end
 
 % to show stimulus on a gaussian window (1) or to show stimulus on an
 % gaussian window with oscilating luminance (2);
-gausswin = 2;
+gausswin = 1;
 % Set gaussian window size to medium
 winSize = 1;
 
@@ -155,7 +155,7 @@ currSpeed = motspeed;
 angleRot = 0.9;
 
 % rate of motion direction change
-freqmot = 5;   % in Hz (change/sec)
+freqmot = 2;   % in Hz (change/sec)
 
 % rate of dots size change
 freqdotsz = 3; % in Hz (change/sec)
