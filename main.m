@@ -7,6 +7,7 @@ sca;
 
 % Presets. 
 addpath(genpath('libs\BiomotionToolbox\BiomotionToolbox'))
+addpath(genpath('libs\ParallelPortLibraries'))
 
 
 %% Stimuli variables
@@ -17,16 +18,47 @@ DEBUG=1;
 % configure paralell port adress.
 PORTADDRESS=888;
 
-% background contrast (relative to white)? (ver Gabriel)
-BACKGROUNDCOLOR=[.4 .4 .4];
+% 1 to send triggers through port conn
+PORTTRIGGER = 0;
+
+% choose between 1 - lptwrite (32bits); or 2 - IOport (64bits);
+SYNCBOX = 2;
+
+if PORTTRIGGER
+    if SYNCBOX == 1
+   
+        PortAddress = hex2dec('E800'); %-configure paralell port adress
+    elseif SYNCBOX == 2
+      
+        ioObj = io64;
+        status = io64(ioObj);
+        PortAddress = hex2dec('378'); %-configure paralell port adress
+        data_out=1;
+        io64(ioObj, PortAddress, data_out);
+        data_out=0;
+        pause(0.01);
+        io64(ioObj, PortAddress, data_out);
+    end
+end
+
+
+
+% BACKGROUND contrast (relative to white)? (ver Gabriel)
+bgDefault=.4;
+BACKGROUNDCOLOR=[(round(bgDefault*255)),...
+    (round(bgDefault*255)),...
+    (round(bgDefault*255))];
 
 
 % Number of complete repetition loops presented.
-pixelSize=2;
-biologicalMotionRate=.25;
-numRepetitions=12;
+pixelSize=3;
+numRepetitions=8;          % Define the number of stim presentations.
+biologicalMotionRate=.5;   % Define rate of biological motion stim.
+stimDuration=8000;         % In miliseconds.
+
 
 %% Stimuli definition
+stimDurationInSeconds=stimDuration/1000;
 
 % --- STIM ---
 % Define stim action.
@@ -54,6 +86,8 @@ try
     % Load action.
     % FileType: bvh.
     bm=BioMotion(stimFullPath,'Filetype','bvh'); 
+    
+    bm.Loop=2;
         
     % Set beggining timestamp.
     startTime=GetSecs;
@@ -67,18 +101,16 @@ try
         else
             bm.Scramble=0;
             condition='human motion';
-            bm.Rotation=(round(rand(1)*50));
+            bm.Rotation=(round(rand(1)*360));
         end
         
-        % bm.ScrambleOffsets=(rand(((size(bm.ScrambleOffsets))))-.5) * 150;
-        
 
-        for fr = 1:15%bm.nFrames      % Run through frames 1 until the end.
-            if KbCheck                % Check for button presses, exit if any.
+        for fr = 1:stimDurationInSeconds*60 %bm.nFrames % Run through frames 1 until the end.
+            if KbCheck                      % Check for button presses, exit if any.
                 break;
             end
             % draw the dots, note the call %to GetFrame.
-            moglDrawDots3D(win.Number,bm.GetFrame(fr*2),pixelSize); 
+            moglDrawDots3D(win.Number,bm.GetFrame(fr),pixelSize); 
             % Display the dots on the screen.
             Screen('Flip',win.Number); 
         end

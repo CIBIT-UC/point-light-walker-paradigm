@@ -5,7 +5,7 @@ clear all;                          % clear current workspace
  
 combiname = './actions/19_01.txt';   % exact file location
  
-win = SetScreen('OpenGL',1, 'Window', 1 );        % Open a screen
+win = SetScreen('OpenGL',1, 'Window',1 );        % Open a screen
 SetProjection(win);                 % Set the type of projection 
  
 try   
