@@ -42,7 +42,6 @@ if PORTTRIGGER
 end
 
 
-
 % BACKGROUND contrast (relative to white)? (ver Gabriel)
 bgDefault=.4;
 BACKGROUNDCOLOR=[(round(bgDefault*255)),...
@@ -91,6 +90,9 @@ try
         
     % Set beggining timestamp.
     startTime=GetSecs;
+    
+    
+ 
     
     for n=1:numRepetitions
         

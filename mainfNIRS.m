@@ -16,9 +16,6 @@ addpath(genpath('utils'))
 % Define if debugging.
 DEBUG=1;
 
-% configure paralell port adress.
-PORTADDRESS=888;
-
 % 1 to send triggers through port conn
 PORTTRIGGER = 1;
 
@@ -28,13 +25,13 @@ SYNCBOX = 2;
 if ~DEBUG
     if PORTTRIGGER
         if SYNCBOX == 1
-            
-            PortAddress = hex2dec('E800'); %-configure paralell port adress
+            ioObj = [];
+            portAddress = hex2dec('E800'); %-configure paralell port adress
         elseif SYNCBOX == 2
             
             ioObj = io64;
             status = io64(ioObj);
-            PortAddress = hex2dec('378'); %-configure paralell port adress
+            portAddress = hex2dec('378'); %-configure paralell port adress
         end
     end
 end
@@ -128,8 +125,15 @@ try
     startTime=GetSecs;
     
     
-    % ---- Present first baseline.
+    if ~DEBUG
         
+        message=1; % baseline
+        success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
+        
+    end
+    
+    % ---- Present first baseline.
+    
     % Draw the fixation cross in white, set it to the center of our screen and
     % set good quality antialiasing
     Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
@@ -140,9 +144,9 @@ try
     waitFor(5-(GetSecs-startTime));
     
     fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
-            0,...
-            'baseline',...
-            GetSecs-startTime)
+        0,...
+        'baseline',...
+        GetSecs-startTime)
     
     
     % ---- Present first baseline.
@@ -153,10 +157,20 @@ try
             bm.Scramble=1;
             bm.ScramblePositions;
             condition='scrambled';
+            
+            if ~DEBUG
+                message=2; % scrambled
+                success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
+            end
+            
         else
             bm.Scramble=0;
             condition='human motion';
             bm.Rotation=(round(rand(1)*360));
+            if ~DEBUG
+                message=3; % human motion
+                success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
+            end
         end
         
         
@@ -177,6 +191,12 @@ try
             GetSecs-startTime)
         
         
+        if ~DEBUG
+            message=1; % baseline
+            success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
+        end
+        
+        
         % Draw the fixation cross in white, set it to the center of our screen and
         % set good quality antialiasing
         Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
@@ -185,7 +205,7 @@ try
         Screen('Flip',win.Number);
         
         waitFor(((n*10)+5)-(GetSecs-startTime));
-
+        
         
         fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
             n,...
