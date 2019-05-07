@@ -121,18 +121,17 @@ try
     
     pause(1),
     
-    % Set beggining timestamp.
+    % ---- Set START timestamp. ----
     startTime=GetSecs;
     
-    
+    % Send Trigger
     if ~DEBUG
-        
-        message=1; % baseline
+        % Baseline == 2.
+        message=2; 
         success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
-
     end
     
-    % ---- Present first baseline.
+    % - Present first baseline. -
     
     % Draw the fixation cross in white, set it to the center of our screen and
     % set good quality antialiasing
@@ -152,60 +151,58 @@ try
     % ---- Present first baseline.
     
     for n=1:numActivationBlocks
-        
+        % Determine condition.
         if rem(n,1/biologicalMotionRate)~=0
             bm.Scramble=1;
             bm.ScramblePositions;
             condition='scrambled';
-            
-                if ~DEBUG
-                    message=2; % scrambled
-                    success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
-                end
-                
         else
             bm.Scramble=0;
             condition='human motion';
             bm.Rotation=(round(rand(1)*360));
-             if ~DEBUG
-                    message=3; % human motion
-                    success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
-                end
         end
         
+        % Send trigger.
+        if ~DEBUG
+            message=bm.Scramble; % scrambled == 1, human motion == 0;
+            success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
+        end
         
+        % Present stimuli.
         for fr = 1:stimDurationInSeconds*60 %bm.nFrames % Run through frames 1 until the end.
             if KbCheck                      % Check for button presses, exit if any.
                 break;
             end
-            % draw the dots, note the call %to GetFrame.
+            % Draw the dots, note the call %to GetFrame.
             moglDrawDots3D(win.Number,bm.GetFrame(fr),pixelSize);
             % Display the dots on the screen.
             Screen('Flip',win.Number);
         end
         
+        % Print to command line.
         fprintf('--duration of instance %i, condition %s, rotation %i, time since start  %.3f \n',...
             n,...
             condition,...
             bm.Rotation,...
             GetSecs-startTime)
         
+        % Send trigger with condition val.
+        if ~DEBUG
+            message=1; % baseline
+            success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
+        end
         
         % Draw the fixation cross in white, set it to the center of our screen and
         % set good quality antialiasing
         Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
-        
         % Flip to the screen
         Screen('Flip',win.Number);
-        
         waitFor(((n*10)+5)-(GetSecs-startTime));
-        
         
         fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
             n,...
             'baseline',...
             GetSecs-startTime)
-        
         
     end
     
