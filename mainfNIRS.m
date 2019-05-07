@@ -10,8 +10,7 @@ addpath(genpath('libs\BiomotionToolbox\BiomotionToolbox'))
 addpath(genpath('libs\ParallelPortLibraries'))
 addpath(genpath('utils'))
 
-
-%% Stimuli variables
+%% Configs variables
 
 % Define if debugging.
 DEBUG=1;
@@ -36,17 +35,21 @@ if ~DEBUG
     end
 end
 
+%% Stimuli variables
+
 % BACKGROUND contrast (relative to white)? (ver Gabriel)
 bgDefault=.4;
 BACKGROUNDCOLOR=[(round(bgDefault*255)),...
     (round(bgDefault*255)),...
     (round(bgDefault*255))];
 
-% Number of complete repetition loops presented.
-pixelSize=3;
-numActivationBlocks=8;          % Define the number of stim presentations.
-biologicalMotionRate=.5;   % Define rate of biological motion stim.
-stimDuration=5000;         % In miliseconds.
+
+pixelSize=3;                    % Number of complete repetition loops presented.
+numActivationBlocks=4;          % Define the number of stim presentations.
+biologicalMotionRate=.5;        % Define rate of biological motion stim.
+stimDuration=5000;              % In miliseconds.
+baselineDuration=8;
+
 
 %% Stimuli definition
 stimDurationInSeconds=stimDuration/1000;
@@ -107,8 +110,8 @@ try
     
     % --- Text to display. ---
     % Draw text in the middle of the screen in Courier in white
-    Screen('TextSize', win.Number, 80);
-    Screen('TextFont', win.Number, 'Courier');
+    Screen('TextSize', win.Number, 60);
+
     DrawFormattedText( win.Number, 'Press any key.', 'center',...
         yCenter , white);
     
@@ -130,6 +133,8 @@ try
         message=2; 
         success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
     end
+    timeLog(1)=0;
+    messageLog(1)=2; 
     
     % - Present first baseline. -
     
@@ -140,12 +145,13 @@ try
     % Flip to the screen
     Screen('Flip',win.Number);
     
-    waitFor(5-(GetSecs-startTime));
+    waitFor(baselineDuration -(GetSecs-startTime));
     
     fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
         0,...
         'baseline',...
         GetSecs-startTime)
+    
     
     
     % ---- Present first baseline.
@@ -167,6 +173,9 @@ try
             message=bm.Scramble; % scrambled == 1, human motion == 0;
             success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
         end
+        timeLog(end+1)=GetSecs-startTime;
+        messageLog(end+1)=bm.Scramble;
+
         
         % Present stimuli.
         for fr = 1:stimDurationInSeconds*60 %bm.nFrames % Run through frames 1 until the end.
@@ -192,13 +201,15 @@ try
             message=2; 
             success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
         end
+        timeLog(end+1)=GetSecs-startTime;
+        messageLog(end+1)=2;
         
         % Draw the fixation cross in white, set it to the center of our screen and
         % set good quality antialiasing
         Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
         % Flip to the screen
         Screen('Flip',win.Number);
-        waitFor(((n*10)+5)-(GetSecs-startTime));
+        waitFor(((n*(5+baselineDuration))+baselineDuration)-(GetSecs-startTime));
         
         % Print to command line.
         fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
@@ -211,6 +222,7 @@ try
     % Set end timestamp.
     endTime=GetSecs-startTime;
     fprintf('--duration of the protocol was %.3f \n', endTime)
+
     
     Screen('Flip',win.Number);
     
