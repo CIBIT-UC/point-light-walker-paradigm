@@ -11,7 +11,6 @@ addpath(genpath('libs\ParallelPortLibraries'))
 addpath(genpath('utils'))
 
 %% Configs variables
-
 % Define if debugging.
 DEBUG=1;
 
@@ -35,7 +34,12 @@ if ~DEBUG
     end
 end
 
+
 %% Stimuli variables
+
+% -------------------------------------------------------------- %
+% default: triggers: baseline=10; human motion=11; scrambled=12; %
+% -------------------------------------------------------------- %
 
 % BACKGROUND contrast (relative to white)? (ver Gabriel)
 bgDefault=.4;
@@ -44,15 +48,23 @@ BACKGROUNDCOLOR=[(round(bgDefault*255)),...
     (round(bgDefault*255))];
 
 
-pixelSize=3;                    % Number of complete repetition loops presented.
+baselineTrigger=10;             % baseline trigger val.
+
+pixelSize=3;                    % Pixel size.
+
 numActivationBlocks=4;          % Define the number of stim presentations.
 biologicalMotionRate=.5;        % Define rate of biological motion stim.
-stimDuration=5000;              % In miliseconds.
-baselineDuration=8;
+stimDuration=5000;              % Stimuli duration in miliseconds.
+stimDurationInSeconds=stimDuration/1000;
+baselineDuration=8;             % Baseline duration in miliseconds.
 
+messageLog=[];                  % Initiate log variables.
+timeLog=[];                     % Initiate log variables.
+
+accFactor=2;                    % Acceleration factor (jump through motion samples).
+sizeFactor=1.5;                 % Increase size of the display area.
 
 %% Stimuli definition
-stimDurationInSeconds=stimDuration/1000;
 
 % --- STIM ---
 
@@ -71,21 +83,20 @@ screenid=1;
 black=BlackIndex(screenid);
 white=WhiteIndex(screenid);
 
-
 % Open a screen.
 win=SetScreen(  'OpenGL', 1,...
     'Window', screenid,...
     'BGColor', BACKGROUNDCOLOR);
+
 % Set the type of projection.
 SetProjection(win);
-
 
 try
     % Load action.
     % FileType: bvh.
     bm=BioMotion(stimFullPath,'Filetype','bvh');
     
-    bm.Loop=2;
+    bm.Loop=2;  
     
     % --- Preparation. ---
     
@@ -122,7 +133,11 @@ try
     % key) to terminate the demo
     KbStrokeWait;
     
-    pause(1),
+    pause(2),
+    
+    if ~DEBUG
+        HideCursor,
+    end
     
     % ---- Set START timestamp. ----
     startTime=GetSecs;
@@ -130,17 +145,17 @@ try
     % Send Trigger
     if ~DEBUG
         % Baseline == 2.
-        message=2; 
+        message=baselineTrigger; 
         success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
     end
     timeLog(1)=0;
-    messageLog(1)=2; 
+    messageLog(1)=baselineTrigger; 
     
     % - Present first baseline. -
     
     % Draw the fixation cross in white, set it to the center of our screen and
     % set good quality antialiasing
-    Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
+    Screen('DrawDots', win.Number, [xCenter yCenter], pixelSize, white, []);
     
     % Flip to the screen
     Screen('Flip',win.Number);
@@ -151,7 +166,6 @@ try
         0,...
         'baseline',...
         GetSecs-startTime)
-    
     
     
     % ---- Present first baseline.
@@ -170,11 +184,12 @@ try
         
         % Send trigger.
         if ~DEBUG
-            message=bm.Scramble; % scrambled == 1, human motion == 0;
+            message=bm.Scramble+11; % scrambled == 1, human motion == 0;
             success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
         end
+        
         timeLog(end+1)=GetSecs-startTime;
-        messageLog(end+1)=bm.Scramble;
+        messageLog(end+1)=bm.Scramble+11;
 
         
         % Present stimuli.
@@ -198,15 +213,15 @@ try
         % ---- Baseline. ----
         % Send trigger with condition val.
         if ~DEBUG
-            message=2; 
+            message=baselineTrigger; 
             success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
         end
         timeLog(end+1)=GetSecs-startTime;
-        messageLog(end+1)=2;
+        messageLog(end+1)=baselineTrigger;
         
         % Draw the fixation cross in white, set it to the center of our screen and
         % set good quality antialiasing
-        Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
+        Screen('DrawDots', win.Number, [xCenter yCenter], pixelSize, white, []);
         % Flip to the screen
         Screen('Flip',win.Number);
         waitFor(((n*(5+baselineDuration))+baselineDuration)-(GetSecs-startTime));
@@ -227,7 +242,12 @@ try
     Screen('Flip',win.Number);
     
     clear screen;
+    
+    if ~DEBUG
+        ShowCursor,
+    end
 catch ME
+    ShowCursor,
     clear screen;
     rethrow(ME);
 end

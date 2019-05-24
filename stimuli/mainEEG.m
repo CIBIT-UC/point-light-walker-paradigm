@@ -6,31 +6,23 @@ close all;
 sca;
 
 % Presets.
-addpath(genpath('libs\BiomotionToolbox\BiomotionToolbox'))
-addpath(genpath('libs\ParallelPortLibraries'))
+addpath(genpath('libs'))
 addpath(genpath('utils'))
 
-
-timeLog=struct();
-
-%% Configs variables
+%% CONFIGS
 
 % Define if debugging.
 DEBUG=1;
-
 % 1 to send triggers through port conn
-PORTTRIGGER = 1;
-
+PORTTRIGGER = 0;
 % choose between 1 - lptwrite (32bits); or 2 - IOport (64bits);
 SYNCBOX = 2;
 
 if ~DEBUG
     if PORTTRIGGER
         if SYNCBOX == 1
-            ioObj = [];
             portAddress = hex2dec('E800'); %-configure paralell port adress
         elseif SYNCBOX == 2
-            
             ioObj = io64;
             status = io64(ioObj);
             portAddress = hex2dec('378'); %-configure paralell port adress
@@ -46,13 +38,17 @@ BACKGROUNDCOLOR=[(round(bgDefault*255)),...
     (round(bgDefault*255)),...
     (round(bgDefault*255))];
 
+pixelSize=3;
 
-pixelSize=3;                    % Number of complete repetition loops presented.
-numActivationBlocks=4;          % Define the number of stim presentations.
-biologicalMotionRate=.5;        % Define rate of biological motion stim.
-stimDuration=5000;              % In miliseconds.
-baselineDuration=8;
+numActivationBlocks=24;     % Define the number of stim presentations.
+biologicalMotionRate=.25;   % Define rate of biological motion stim.
+stimDuration=250;           % In miliseconds.
 
+messageLog=[];              % initiate log variables.
+timeLog=[];                 % initiate log variables.
+
+accFactor=2;                % Acceleration factor (jump through motion samples).
+sizeFactor=1.5;             % Increase size of the display area.
 
 %% Stimuli definition
 stimDurationInSeconds=stimDuration/1000;
@@ -74,11 +70,11 @@ screenid=1;
 black=BlackIndex(screenid);
 white=WhiteIndex(screenid);
 
-
 % Open a screen.
 win=SetScreen(  'OpenGL', 1,...
     'Window', screenid,...
     'BGColor', BACKGROUNDCOLOR);
+
 % Set the type of projection.
 SetProjection(win);
 
@@ -89,7 +85,7 @@ try
     bm=BioMotion(stimFullPath,'Filetype','bvh');
     
     bm.Loop=2;
-    
+        
     % --- Preparation. ---
     
     % Get the centre coordinate of the window
@@ -125,41 +121,18 @@ try
     % key) to terminate the demo
     KbStrokeWait;
     
-    pause(1),
+    pause(2),
+    
+    if ~DEBUG
+        HideCursor,
+    end
     
     % ---- Set START timestamp. ----
     startTime=GetSecs;
     
-    % Send Trigger
-    if ~DEBUG
-        % Baseline == 2.
-        message=2; 
-        success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
-    end
-    timeLog(1).timeStamp=0;
-    timeLog(1).message=2; 
-    
-    % - Present first baseline. -
-    
-    % Draw the fixation cross in white, set it to the center of our screen and
-    % set good quality antialiasing
-    Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
-    
-    % Flip to the screen
-    Screen('Flip',win.Number);
-    
-    waitFor(baselineDuration -(GetSecs-startTime));
-    
-    fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
-        0,...
-        'baseline',...
-        GetSecs-startTime)
-    
-    
-    
-    % ---- Present first baseline.
     
     for n=1:numActivationBlocks
+        
         % Determine condition.
         if rem(n,1/biologicalMotionRate)~=0
             bm.Scramble=1;
@@ -173,51 +146,27 @@ try
         
         % Send trigger.
         if ~DEBUG
-            message=bm.Scramble; % scrambled == 1, human motion == 0;
+            message=bm.Scramble+1; % scrambled == 2, human motion == 1;
             success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
         end
         timeLog(end+1)=GetSecs-startTime;
-        messagelog(end+1)=bm.Scramble;
-
+        messageLog(end+1)=bm.Scramble+1;
         
         % Present stimuli.
         for fr = 1:stimDurationInSeconds*60 %bm.nFrames % Run through frames 1 until the end.
             if KbCheck                      % Check for button presses, exit if any.
                 break;
             end
-            % Draw the dots, note the call %to GetFrame.
-            moglDrawDots3D(win.Number,bm.GetFrame(fr),pixelSize);
+            % draw the dots, note the call %to GetFrame.
+            moglDrawDots3D(win.Number,bm.GetFrame(fr*accFactor)*sizeFactor,pixelSize);
             % Display the dots on the screen.
             Screen('Flip',win.Number);
         end
         
-        % Print to command line.
-        fprintf('--duration of instance %i, condition %s, rotation %i, time since start  %.3f \n',...
+        fprintf('--duration of instance %i, condition %s, rotation %i, was %.3f \n',...
             n,...
             condition,...
             bm.Rotation,...
-            GetSecs-startTime)
-        
-        % ---- Baseline. ----
-        % Send trigger with condition val.
-        if ~DEBUG
-            message=2; 
-            success=sendTrigger(PORTTRIGGER, portAddress, SYNCBOX, ioObj, message);
-        end
-        timeLog(end+1).timeStamp=GetSecs-startTime;
-        timeLog(end).message=2;
-        
-        % Draw the fixation cross in white, set it to the center of our screen and
-        % set good quality antialiasing
-        Screen('DrawDots', win.Number, [xCenter yCenter], 2, white, [], 2);
-        % Flip to the screen
-        Screen('Flip',win.Number);
-        waitFor(((n*(5+baselineDuration))+baselineDuration)-(GetSecs-startTime));
-        
-        % Print to command line.
-        fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
-            n,...
-            'baseline',...
             GetSecs-startTime)
         
     end
@@ -225,13 +174,17 @@ try
     % Set end timestamp.
     endTime=GetSecs-startTime;
     fprintf('--duration of the protocol was %.3f \n', endTime)
-
     
     Screen('Flip',win.Number);
     
     clear screen;
+    
+    if ~DEBUG
+        ShowCursor,
+    end
 catch ME
     clear screen;
+    ShowCursor,
     rethrow(ME);
 end
 
