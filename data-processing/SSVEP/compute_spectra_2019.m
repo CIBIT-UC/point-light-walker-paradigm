@@ -16,16 +16,18 @@ load('chanlocs62.mat')
 
 clear ALLEEG
 
+file_offset=3;
+
 for subs = 1:numel(nomes_subs)
     
-    for files = 1:2
+    for files = 1:3
         
         subject = cell2mat(nomes_subs(subs));
         
-        filename = sprintf('%s%d.set', subject, files);
+        filename = sprintf('%s%d.set', subject, files+file_offset);
         
-        ALLEEG(1) = pop_loadset('filename', p_files(files).name,...
-        'filepath', p_files(files).folder);
+        ALLEEG(1) = pop_loadset('filename', p_files(files+file_offset).name,...
+        'filepath', p_files(files+file_offset).folder);
         
         % ----------------------------------------------------------------
         %                compute spectra for epoched data
@@ -48,10 +50,10 @@ for subs = 1:numel(nomes_subs)
             
             spectra_epoch_Allcond{files}(:,:,subs) = mean(spectra,3);
             
-            spectra_epoch_freqs{files}(:,:,subs) = (0:1/(sizeEpo):1-1/(sizeEpo)).*ALLEEG.srate;
+            spectra_epoch_freqs_temp{files}(:,:,subs) = (0:1/(sizeEpo):1-1/(sizeEpo)).*ALLEEG.srate;
             
             spectra_epoch_freqs{files}(:,:,subs) =...
-                spectra_epoch_freqs{files}(1:length(spectra_epoch_freqs{files})/2);
+                spectra_epoch_freqs_temp{files}(1:length(spectra_epoch_freqs_temp{files})/2);
             
             %                 Freq = ((0:1/length(ALLEEG.data(49,:)):1-1/length(ALLEEG.data(49,:)))*ALLEEG.srate).';
             %                 figure; [spectra,freqs,speccomp,contrib,specstd] = spectopo(ALLEEG(dataset).data(1:58,251:750,:), 500, 500, 'freqrange', [2 100], 'freqfac', 2, 'overlap', 128);
@@ -84,8 +86,8 @@ for subs = 1:numel(nomes_subs)
         end
         
         spectra_full_Allcond{files}(:,:,subs) = spectrafull;
-        spectra_full_freqs{files}(:,:,subs) = (0:1/(sizeData):1-1/(sizeData)).*ALLEEG.srate;
-        spectra_full_freqs{files}(:,:,subs) = spectra_full_freqs{files}(1:length(spectra_full_freqs{files})/2);
+        spectra_full_freqs_temp{files}(:,:,subs) = (0:1/(sizeData):1-1/(sizeData)).*ALLEEG.srate;
+        spectra_full_freqs{files}(:,:,subs) = spectra_full_freqs_temp{files}(1:length(spectra_full_freqs_temp{files})/2);
         
         % ----------------------------------------------------------------
         %                compute CSD for beamforming
@@ -109,3 +111,6 @@ for subs = 1:numel(nomes_subs)
 %         toc
     end
 end
+
+
+save('spectraresults_5hz','spectra_full_freqs','spectra_epoch_freqs');

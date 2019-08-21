@@ -40,9 +40,9 @@ BACKGROUNDCOLOR=[(round(bgDefault*255)),...
 
 pixelSize=3;
 
-numActivationBlocks=24;     % Define the number of stim presentations.
+numActivationBlocks=8;      % Define the number of stim presentations.
 biologicalMotionRate=.25;   % Define rate of biological motion stim.
-stimDuration=250;           % In miliseconds.
+stimDuration=1000;           % In miliseconds.
 
 messageLog=[];              % initiate log variables.
 timeLog=[];                 % initiate log variables.
@@ -65,7 +65,7 @@ stimFullPath=fullfile(pwd,'libs','BiomotionToolbox','BiomotionToolbox',...
 % system. This is for demo purposes only.
 Screen('Preference', 'SkipSyncTests', 2);
 % Find the screen to use for displaying the stimuli.
-screenid=1;
+screenid=2;
 % Determine the values of black and white
 black=BlackIndex(screenid);
 white=WhiteIndex(screenid);

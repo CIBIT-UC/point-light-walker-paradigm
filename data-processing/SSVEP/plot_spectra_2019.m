@@ -6,15 +6,18 @@ subj = 1; % use [] if more than one subject
 
 conda = 1; % corresponds to run number (which corresponds to different conditions)
 condb = 2;
+condc = 3;
 
-chan = 55;
+chan = 29;
 
 clear spectra_AllcondSNRa
 clear spectra_AllcondSNRb
+clear spectra_AllcondSNRc
 
 if length(subj) == 1
     spectraA = spectra_epoch_Allcond{1,conda}(:,:,subj);
     spectraB = spectra_epoch_Allcond{1,condb}(:,:,subj);
+    spectraC = spectra_epoch_Allcond{1,condc}(:,:,subj);
 else
     spectraA = mean(spectra_epoch_Allcond{1,conda}(:,:,[subj]),3);
     spectraB = mean(spectra_epoch_Allcond{1,condb}(:,:,[subj]),3);
@@ -37,6 +40,9 @@ for datapnt = winSNR:length(spectraA)-winSNR
     spectra_AllcondSNRb(:,datapnt) = spectraB(:,datapnt)./ ...
         (mean([spectraB(:,(datapnt-winSNR):-1:(datapnt-1)) spectraB(:,(datapnt+1):(datapnt+winSNR))],2));
     
+    spectra_AllcondSNRc(:,datapnt) = spectraC(:,datapnt)./ ...
+        (mean([spectraC(:,(datapnt-winSNR):-1:(datapnt-1)) spectraC(:,(datapnt+1):(datapnt+winSNR))],2));
+    
     spectra_full_freqsSNR = spectra_freqs(2:length(spectra_freqs)-1);
 end
 
@@ -45,11 +51,15 @@ end
 % else
 % end
 
-figure; plot(spectra_full_freqsSNR(minFrq:maxFrq),spectra_AllcondSNRa(chan,minFrq:maxFrq)); hold on;
+figure; 
+plot(spectra_full_freqsSNR(minFrq:maxFrq),spectra_AllcondSNRa(chan,minFrq:maxFrq)); hold on;
 plot(spectra_full_freqsSNR(minFrq:maxFrq),spectra_AllcondSNRb(chan,minFrq:maxFrq), '-r'); hold on;
+plot(spectra_full_freqsSNR(minFrq:maxFrq),spectra_AllcondSNRc(chan,minFrq:maxFrq), '-g'); hold on;
 
-figure; plot(spectra_freqs(minFrq:maxFrq),spectraA(chan,minFrq:maxFrq)); hold on;
+figure; 
+plot(spectra_freqs(minFrq:maxFrq),spectraA(chan,minFrq:maxFrq)); hold on;
 plot(spectra_freqs(minFrq:maxFrq),spectraB(chan,minFrq:maxFrq), '-r'); hold on;
+plot(spectra_freqs(minFrq:maxFrq),spectraC(chan,minFrq:maxFrq), '-g'); hold on;
 
 %% Make the results fit in a fieldtrip structure to plot using fieldtrip functions
 
@@ -60,7 +70,7 @@ cfg = [];
 cfg.channel = {'-AF7' '-AF5' '-AF1' '-AF2' '-AF6' '-AF8' '-AFz' '-PO1' ...
     '-PO2' 'Fp1' 'Fpz' 'Fp2' 'AF3' 'AF4' 'F7' 'F5' 'F3' ...
     'F1' 'Fz' 'F2' 'F4' 'F6' 'F8' 'FT7' 'FC5' 'FC3' 'FC1' 'FCz' 'FC2' 'FC4' ...
-    'FC6' 'FT8' 'T7' 'C5' 'C3' 'C1' 'Cz' 'C2' 'C4' 'C6' 'T8' 'TP7' 'CP5' 'CP3' ...
+    'FC6' 'FT8' 'T7' 'C5' 'C3' 'C1' 'Cz' 'C2' '-C4' 'C6' 'T8' 'TP7' 'CP5' 'CP3' ...
     'CP1' 'CPz' 'CP2' 'CP4' 'CP6' 'TP8' 'P7' 'P5' 'P3' 'P1' 'Pz' 'P2' 'P4' 'P6' ...
     'P8' 'PO7' 'PO5' 'PO3' 'POz' 'PO4' 'PO6' 'PO8' 'O1' 'Oz' 'O2' 'CB1' 'CB2'};
 elec_62 = ft_selectdata(cfg, elec);
@@ -76,7 +86,8 @@ FA_ex.dimord = 'chan_freq';
 % recording
 FA_ex.cumtapcnt = ones(3,1)*2;
 FA_ex.cumsumcnt = ones(3,1)*10000;
-FA_ex.powspctrm = spectra_AllcondSNRa([1:57 59:61], :) - spectra_AllcondSNRb([1:57 59:61], :);
+% FA_ex.powspctrm = (spectra_AllcondSNRa([1:57 59:61], :) + spectra_AllcondSNRb([1:57 59:61], :)+ spectra_AllcondSNRc([1:57 59:61], :))/3;
+FA_ex.powspctrm = spectra_AllcondSNRa([1:29 31:57 59:61], :);
 
 
 % parameters for topoplot
@@ -84,7 +95,7 @@ cfg = [];
 cfg.layout ='standard_1020.elc';
 cfg.showlabels = 'yes';
 cfg.parameter = 'powspctrm';
-cfg.xlim      = [1 20];
+cfg.xlim      = [0 20];
 % cfg.ylim      = [-0.5 1];
 
 % plot spectrum

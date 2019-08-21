@@ -54,9 +54,9 @@ pixelSize=3;                    % Pixel size.
 
 numActivationBlocks=4;          % Define the number of stim presentations.
 biologicalMotionRate=.5;        % Define rate of biological motion stim.
-stimDuration=5000;              % Stimuli duration in miliseconds.
+stimDuration=1000;              % Stimuli duration in miliseconds.
 stimDurationInSeconds=stimDuration/1000;
-baselineDuration=8;             % Baseline duration in miliseconds.
+baselineDuration=1;             % Baseline duration in miliseconds.
 
 messageLog=[];                  % Initiate log variables.
 timeLog=[];                     % Initiate log variables.
@@ -78,7 +78,7 @@ stimFullPath=fullfile(pwd,'libs','BiomotionToolbox','BiomotionToolbox',...
 % system. This is for demo purposes only.
 Screen('Preference', 'SkipSyncTests', 2);
 % Find the screen to use for displaying the stimuli.
-screenid=1;
+screenid=2;
 % Determine the values of black and white
 black=BlackIndex(screenid);
 white=WhiteIndex(screenid);
@@ -224,7 +224,7 @@ try
         Screen('DrawDots', win.Number, [xCenter yCenter], pixelSize, white, []);
         % Flip to the screen
         Screen('Flip',win.Number);
-        waitFor(((n*(5+baselineDuration))+baselineDuration)-(GetSecs-startTime));
+        waitFor(((n*(1+baselineDuration))+baselineDuration)-(GetSecs-startTime));
         
         % Print to command line.
         fprintf('--duration of instance %i, condition %s, time since start %.3f \n',...
